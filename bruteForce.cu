@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <stdint.h>
+#include <omp.h>
 
 // can represent 78 characters, each var will represent 13 chars
 struct passNum{
@@ -26,8 +27,8 @@ uint64_t x13;
 uint64_t x14;
 };
 
-extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *maxNum);
-extern __global__ void findPass(uint64_t *passPtr, uint64_t *bruteNumOut, uint64_t *max);
+extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut);
+extern __global__ void findPass(uint64_t *passPtr, uint64_t *bruteNumOut);
 extern void stringToNumaz(char *str, passNum *passPtr);
 extern void stringToNumazAZ(char *str, passNum *passPtr);
 extern void stringToNumazAZ09(char *str, passNum *passPtr);
@@ -41,25 +42,23 @@ __device__ bool isCracked = false;
 __device__ uint64_t bruteOut = 0;
 
 //wrapper for findPass, allocates memory then passes it to device and calls findPass
-extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *maxNum)
+extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut)
 {
 	uint64_t *devI1Ptr;
 	uint64_t *dev01Ptr;
-	uint64_t *devI2Ptr;
 	
 	cudaMalloc((void **)&dev01Ptr, sizeof(uint64_t));
     cudaMemcpy(dev01Ptr, &bruteNumOut->x1, sizeof(uint64_t), cudaMemcpyHostToDevice);
     cudaMalloc((void **)&devI1Ptr, sizeof(uint64_t));
     cudaMemcpy(devI1Ptr, &passPtr->x1, sizeof(uint64_t), cudaMemcpyHostToDevice);
-    cudaMalloc((void **)&devI2Ptr, sizeof(uint64_t));
-    cudaMemcpy(devI2Ptr, maxNum, sizeof(uint64_t), cudaMemcpyHostToDevice);
+
     
     dim3 dimGrid(40960, 1);
     dim3 dimBlock(512, 1);
     
     if(passPtr->x1 != 0)
     {
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		//cudaMemcpy(&bruteNumOut->x1, dev01Ptr, sizeof(uint64_t), cudaMemcpyDeviceToHost);
 		cudaMemcpyFromSymbol(&bruteNumOut->x1, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
@@ -70,7 +69,7 @@ extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *m
     {
 		cudaMemcpy(devI1Ptr, &passPtr->x2, sizeof(uint64_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev01Ptr, &bruteNumOut->x2, sizeof(uint64_t), cudaMemcpyHostToDevice);
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		cudaMemcpyFromSymbol(&bruteNumOut->x2, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
 		bruteOut = 0;
@@ -80,7 +79,7 @@ extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *m
     {
 		cudaMemcpy(devI1Ptr, &passPtr->x3, sizeof(uint64_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev01Ptr, &bruteNumOut->x3, sizeof(uint64_t), cudaMemcpyHostToDevice);
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		cudaMemcpyFromSymbol(&bruteNumOut->x3, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
 		bruteOut = 0;
@@ -90,7 +89,7 @@ extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *m
     {
 		cudaMemcpy(devI1Ptr, &passPtr->x4, sizeof(uint64_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev01Ptr, &bruteNumOut->x4, sizeof(uint64_t), cudaMemcpyHostToDevice);
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		cudaMemcpyFromSymbol(&bruteNumOut->x4, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
 		bruteOut = 0;
@@ -100,7 +99,7 @@ extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *m
     {
 		cudaMemcpy(devI1Ptr, &passPtr->x5, sizeof(uint64_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev01Ptr, &bruteNumOut->x5, sizeof(uint64_t), cudaMemcpyHostToDevice);
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		cudaMemcpyFromSymbol(&bruteNumOut->x5, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
 		bruteOut = 0;
@@ -110,7 +109,7 @@ extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *m
     {
 		cudaMemcpy(devI1Ptr, &passPtr->x6, sizeof(uint64_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev01Ptr, &bruteNumOut->x6, sizeof(uint64_t), cudaMemcpyHostToDevice);
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		cudaMemcpyFromSymbol(&bruteNumOut->x6, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
 		bruteOut = 0;
@@ -120,7 +119,7 @@ extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *m
     {
 		cudaMemcpy(devI1Ptr, &passPtr->x7, sizeof(uint64_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev01Ptr, &bruteNumOut->x7, sizeof(uint64_t), cudaMemcpyHostToDevice);
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		cudaMemcpyFromSymbol(&bruteNumOut->x7, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
 		bruteOut = 0;
@@ -130,7 +129,7 @@ extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *m
     {
 		cudaMemcpy(devI1Ptr, &passPtr->x8, sizeof(uint64_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev01Ptr, &bruteNumOut->x8, sizeof(uint64_t), cudaMemcpyHostToDevice);
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		cudaMemcpyFromSymbol(&bruteNumOut->x8, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
 		bruteOut = 0;
@@ -140,7 +139,7 @@ extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *m
     {
 		cudaMemcpy(devI1Ptr, &passPtr->x9, sizeof(uint64_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev01Ptr, &bruteNumOut->x9, sizeof(uint64_t), cudaMemcpyHostToDevice);
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		cudaMemcpyFromSymbol(&bruteNumOut->x9, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
 		bruteOut = 0;
@@ -150,7 +149,7 @@ extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *m
     {
 		cudaMemcpy(devI1Ptr, &passPtr->x10, sizeof(uint64_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev01Ptr, &bruteNumOut->x10, sizeof(uint64_t), cudaMemcpyHostToDevice);
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		cudaMemcpyFromSymbol(&bruteNumOut->x10, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
 		bruteOut = 0;
@@ -160,7 +159,7 @@ extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *m
     {
 		cudaMemcpy(devI1Ptr, &passPtr->x11, sizeof(uint64_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev01Ptr, &bruteNumOut->x11, sizeof(uint64_t), cudaMemcpyHostToDevice);
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		cudaMemcpyFromSymbol(&bruteNumOut->x11, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
 		bruteOut = 0;
@@ -170,7 +169,7 @@ extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *m
     {
 		cudaMemcpy(devI1Ptr, &passPtr->x12, sizeof(uint64_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev01Ptr, &bruteNumOut->x12, sizeof(uint64_t), cudaMemcpyHostToDevice);
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		cudaMemcpyFromSymbol(&bruteNumOut->x12, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
 		bruteOut = 0;
@@ -180,7 +179,7 @@ extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *m
     {
 		cudaMemcpy(devI1Ptr, &passPtr->x13, sizeof(uint64_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev01Ptr, &bruteNumOut->x13, sizeof(uint64_t), cudaMemcpyHostToDevice);
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		cudaMemcpyFromSymbol(&bruteNumOut->x13, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
 		bruteOut = 0;
@@ -190,26 +189,24 @@ extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut, uint64_t *m
     {
 		cudaMemcpy(devI1Ptr, &passPtr->x14, sizeof(uint64_t), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev01Ptr, &bruteNumOut->x14, sizeof(uint64_t), cudaMemcpyHostToDevice);
-		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr, devI2Ptr);
+		findPass<<<dimGrid,dimBlock>>>(devI1Ptr, dev01Ptr);
 		cudaThreadSynchronize();
 		cudaMemcpyFromSymbol(&bruteNumOut->x14, "bruteOut", sizeof(uint64_t),0,cudaMemcpyDeviceToHost);
 		bruteOut = 0;
     }
-    cudaError_t cudaErr;
+    /*cudaError_t cudaErr;
     cudaErr = cudaGetLastError();
     printf("%s\n", cudaGetErrorString(cudaErr));
-    cudaThreadSynchronize();
+    cudaThreadSynchronize();*/
     
     cudaFree(devI1Ptr);
     cudaFree(dev01Ptr);
-    cudaFree(devI2Ptr);
     return;
 } 
 
-extern __global__ void findPass(uint64_t *passPtr, uint64_t *bruteNumOut, uint64_t *max)
+extern __global__ void findPass(uint64_t *passPtr, uint64_t *bruteNumOut)
 {
 	//each thread gets its own passNum to increment
-	uint64_t maxNum = *max;
 	uint64_t bruteNum = 0;
 	uint64_t passNum = *passPtr;
 	int bx = blockIdx.x; //40960 blocks
@@ -242,68 +239,110 @@ return;
 }
 
 
-main (int argc, char **argv) {
+int main (int argc, char **argv) {
 	//variables
-	bool demoMode = 0;
-	passNum pass = {0,0,0,0,0,0,0,0,0};//Users entered password
+	char passTypeChar[4];
+	int passType = 0; //type of password
+	char text[80];//users password
+	passNum pass = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};//Users entered password
 	passNum *passPtr = &pass;
-	passNum brute = {0,0,0,0,0,0,0,0,0};//programs cracked password to be found
+	passNum brute = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};//programs cracked password to be found
 	passNum *brutePtr = &brute;
-	uint64_t *maxNumaz;
-	maxNumaz = (uint64_t*)malloc(sizeof(uint64_t));
-	*maxNumaz = 1250000000000; //line where the gpu may timeout
-	/*
-	az = 				8 zs	217180147158	
-	azAZ = 				6 zs	38736564342
-	azAZ09 =			6 zs	168705298125
-	azAZ09sc =			6 ~s	661055187436 
+
 	
-	*/
 	//take in user inputs   
-	char text[80];
-	if(demoMode)
-	char *password = getpass("Password: ");
-	else
-	{
-		fputs("Please Enter Your Password: ", stdout);
-		fflush(stdout); /* http://c-faq.com/stdio/fflush.html */
-		fgets(text, sizeof text, stdin);
-		printf("text = %s \n", text);
-	}
+	printf("\n1: a-z\n2: a-z A-Z\n3: a-z A-Z 0-9\n4: a-z A-Z 0-9 Special Characters\n");
+	printf("Please Enter The Type of Password: ");
+	fflush(stdout); /* http://c-faq.com/stdio/fflush.html */
+	fgets(passTypeChar, sizeof passTypeChar, stdin);
+	passType = atoi(passTypeChar);
+	fputs("Please Enter Your Password: ", stdout);
+	fflush(stdout); /* http://c-faq.com/stdio/fflush.html */
+	fgets(text, sizeof text, stdin);
 	
 	char *str = &text[0];
-	stringToNumazAZ(str, passPtr);
-	printf("x1 = %llu \n", passPtr->x1);
-	printf("x2 = %llu \n", passPtr->x2);
-	printf("x3 = %llu \n", passPtr->x3);
-	printf("x4 = %llu \n", passPtr->x4);
-	printf("x5 = %llu \n", passPtr->x5);
-	printf("x6 = %llu \n", passPtr->x6);
+	switch(passType)
+	{
+	case 1:
+	stringToNumaz(str, passPtr);
+	break;
 	
-	findPass_wrapper(passPtr, brutePtr, maxNumaz);
-	printf("x1 = %llu \n", brutePtr->x1);
-	printf("x2 = %llu \n", brutePtr->x2);
-	printf("x3 = %llu \n", brutePtr->x3);
-	printf("x4 = %llu \n", brutePtr->x4);
-	printf("x5 = %llu \n", brutePtr->x5);
-	printf("x6 = %llu \n", brutePtr->x6);
-	printf("x7 = %llu \n", brutePtr->x7);
-	printf("x8 = %llu \n", brutePtr->x8);
-	printf("x9 = %llu \n", brutePtr->x9);
+	case 2:
+	stringToNumazAZ(str, passPtr);
+	break;
+	
+	case 3:
+	stringToNumazAZ09(str, passPtr);
+	break;
+	
+	case 4:
+	stringToNumazAZ09sc(str, passPtr);
+	break;
+	
+	default:
+	printf("Please enter a valid password type!\n");
+	return 0;
+	}
+	
+	printf("Working...\n");
+	
+	// create CUDA event handles for timing purposes
+	cudaEvent_t start_event, stop_event;
+	float elapsed_time_gpu;
+  
+	CUDA_SAFE_CALL( cudaEventCreate(&start_event) );
+	CUDA_SAFE_CALL( cudaEventCreate(&stop_event) );
+	cudaEventRecord(start_event, 0);   
+	findPass_wrapper(passPtr, brutePtr);
+	cudaThreadSynchronize();
+	cudaEventRecord(stop_event, 0);
+	cudaEventSynchronize(stop_event);
+	CUDA_SAFE_CALL( cudaEventElapsedTime(&elapsed_time_gpu,start_event, stop_event) )
+  
+  //print out statistics
+	printf("Found!\nParallel Brute Force Time: %.2f msec\n", elapsed_time_gpu);
+	printf("Your password is %s\n",text);
+	printf("The GPU created the following number of strings:\n");
+	
+	printf("%llu +\n", brutePtr->x1);
+	if(brutePtr->x2 > 0)
+		printf("%llu +\n", brutePtr->x2);
+	if(brutePtr->x3 > 0)
+		printf("%llu +\n", brutePtr->x3);
+	if(brutePtr->x4 > 0)
+		printf("%llu +\n", brutePtr->x4);
+	if(brutePtr->x5 > 0)
+		printf("%llu +\n", brutePtr->x5);
+	if(brutePtr->x6 > 0)
+		printf("%llu +\n", brutePtr->x6);
+	if(brutePtr->x7 > 0)
+		printf("%llu +\n", brutePtr->x7);
+	if(brutePtr->x8 > 0)
+		printf("%llu +\n", brutePtr->x8);
+	if(brutePtr->x9 > 0)
+		printf("%llu +\n", brutePtr->x9);
+	if(brutePtr->x10 > 0)
+		printf("%llu +\n", brutePtr->x10);
+	if(brutePtr->x11 > 0)
+		printf("%llu +\n", brutePtr->x11);
+	if(brutePtr->x12 > 0)
+		printf("%llu +\n", brutePtr->x12);
+	if(brutePtr->x13 > 0)
+		printf("%llu +\n", brutePtr->x13);
+	if(brutePtr->x14 > 0)
+		printf("%llu +\n", brutePtr->x14);
 	
 	return 0;
-	
 }
 
 //hash function for a-z special chars(not congruent, but it doesn't have any collisions) ascii valid chars 33 - 126
 void stringToNumaz(char *str, passNum *passPtr)
 {
-
+	
 	for(int i = 0; i < 80; i++)
 	{
 		if(str[i] == '\n')
 			return;
-
 		
 		if(i > 79)
 			passPtr->x11 += (str[i] - 'a' + 1) * pow(26,i-80);

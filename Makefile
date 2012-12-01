@@ -3,8 +3,7 @@ INCLUDE=-I/usr/local/apps/cuda/3.2/cuda/include \
         -I/usr/local/apps/cuda/SDK2/C/common/inc
 
 LIBDIR=-L/usr/local/apps/cuda/SDK2/C/lib
-LIBS=-lcutil
-
+LIBS=-lcutil -Xcompiler -fopenmp
 BRUTESOURCE=bruteForce.cu
 EXECUTABLE=brute
 #this compiles all of the code for all the different programs
