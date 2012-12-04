@@ -29,6 +29,8 @@ uint64_t x14;
 
 extern void findPass_wrapper(passNum *passPtr, passNum *bruteNumOut);
 extern __global__ void findPass(uint64_t *passPtr, uint64_t *bruteNumOut);
+extern void seqFindPass_wrapper(passNum *passPtr, passNum *bruteNumOut);
+extern void seqFindPass(uint64_t *passPtr, uint64_t *bruteNumOut);
 extern void stringToNumaz(char *str, passNum *passPtr);
 extern void stringToNumazAZ(char *str, passNum *passPtr);
 extern void stringToNumazAZ09(char *str, passNum *passPtr);
@@ -238,6 +240,89 @@ extern __global__ void findPass(uint64_t *passPtr, uint64_t *bruteNumOut)
 return;
 }
 
+void seqFindPass_wrapper(passNum *passPtr, passNum *bruteNumOut)
+{
+	if(passPtr->x1 != 0)
+    {
+		seqFindPass(&passPtr->x1, &bruteNumOut->x1);
+    }
+    
+    if(passPtr->x2 != 0)
+    {
+		seqFindPass(&passPtr->x2, &bruteNumOut->x2);
+    }
+    
+    if(passPtr->x3 != 0)
+    {
+		seqFindPass(&passPtr->x3, &bruteNumOut->x3);
+    }
+    
+    if(passPtr->x4 != 0)
+    {
+		seqFindPass(&passPtr->x4, &bruteNumOut->x4);
+    }
+    
+    if(passPtr->x5 != 0)
+    {
+		seqFindPass(&passPtr->x5, &bruteNumOut->x5);
+    }
+    
+    if(passPtr->x6 != 0)
+    {
+		seqFindPass(&passPtr->x6, &bruteNumOut->x6);
+    }
+    
+    if(passPtr->x7 != 0)
+    {
+		seqFindPass(&passPtr->x7, &bruteNumOut->x7);
+    }
+    
+    if(passPtr->x8 != 0)
+    {
+		seqFindPass(&passPtr->x8, &bruteNumOut->x8);
+    }
+    
+    if(passPtr->x9 != 0)
+    {
+		seqFindPass(&passPtr->x9, &bruteNumOut->x9);
+    }
+    
+    if(passPtr->x10 != 0)
+    {
+		seqFindPass(&passPtr->x10, &bruteNumOut->x10);
+    }
+    
+    if(passPtr->x11 != 0)
+    {
+		seqFindPass(&passPtr->x11, &bruteNumOut->x11);
+    }
+    
+    if(passPtr->x13 != 0)
+    {
+		seqFindPass(&passPtr->x13, &bruteNumOut->x13);
+    }
+    
+    if(passPtr->x14 != 0)
+    {
+		seqFindPass(&passPtr->x14, &bruteNumOut->x14);
+    }
+    
+    return;
+}
+
+void seqFindPass(uint64_t *passPtr, uint64_t *bruteNumOut)
+{
+
+int i;
+#pragma omp parallel for
+for(i = 0; i <= *passPtr; i++)
+{
+}
+
+*bruteNumOut = i;
+return;
+}
+
 
 int main (int argc, char **argv) {
 	//variables
@@ -248,7 +333,8 @@ int main (int argc, char **argv) {
 	passNum *passPtr = &pass;
 	passNum brute = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};//programs cracked password to be found
 	passNum *brutePtr = &brute;
-
+	passNum seqbrute = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};//seq programs cracked password to be found
+	passNum *seqbrutePtr = &seqbrute;
 	
 	//take in user inputs   
 	printf("\n1: a-z\n2: a-z A-Z\n3: a-z A-Z 0-9\n4: a-z A-Z 0-9 Special Characters\n");
@@ -288,7 +374,15 @@ int main (int argc, char **argv) {
 	
 	// create CUDA event handles for timing purposes
 	cudaEvent_t start_event, stop_event;
-	float elapsed_time_gpu;
+	float elapsed_time_gpu, elapsed_time_cpu;
+  
+	CUDA_SAFE_CALL( cudaEventCreate(&start_event) );
+	CUDA_SAFE_CALL( cudaEventCreate(&stop_event) );
+	cudaEventRecord(start_event, 0);   
+	seqFindPass_wrapper(passPtr, seqbrutePtr);
+	cudaEventRecord(stop_event, 0);
+	cudaEventSynchronize(stop_event);
+	CUDA_SAFE_CALL( cudaEventElapsedTime(&elapsed_time_cpu,start_event, stop_event) )
   
 	CUDA_SAFE_CALL( cudaEventCreate(&start_event) );
 	CUDA_SAFE_CALL( cudaEventCreate(&stop_event) );
@@ -300,9 +394,10 @@ int main (int argc, char **argv) {
 	CUDA_SAFE_CALL( cudaEventElapsedTime(&elapsed_time_gpu,start_event, stop_event) )
   
   //print out statistics
-	printf("Found!\nParallel Brute Force Time: %.2f msec\n", elapsed_time_gpu);
+	printf("Found!\nCPU Brute Force Time: %.2f msec\n", elapsed_time_cpu);
+	printf("GPU Brute Force Time: %.2f msec\n", elapsed_time_gpu);
 	printf("Your password is %s\n",text);
-	printf("The GPU created the following number of strings:\n");
+	printf("The computation tried the following number of strings:\n");
 	
 	printf("%llu +\n", brutePtr->x1);
 	if(brutePtr->x2 > 0)
