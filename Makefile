@@ -3,14 +3,15 @@ INCLUDE=-I/usr/local/apps/cuda/3.2/cuda/include \
         -I/usr/local/apps/cuda/SDK2/C/common/inc
 
 LIBDIR=-L/usr/local/apps/cuda/SDK2/C/lib
-LIBS=-lcutil -Xcompiler -fopenmp
+OMP=-Xcompiler -fopenmp
+LIBS=-lcutil
 BRUTESOURCE=bruteForce.cu
 EXECUTABLE=brute
 #this compiles all of the code for all the different programs
 #$(EXECUTABLE): $(CC) $(INCLUDE) $(LIBDIR) $(LIBS) -o brute bruteForce.cu
 # $(BRUTESOURCE)
 $(EXECUTABLE): bruteForce.cu
-	$(CC) $(INCLUDE) $(LIBDIR) $< -o $@ $(LIBS)
+	$(CC) $(INCLUDE) $(LIBDIR) $(OMP) $< -o $@ $(LIBS)
 	
 sequencialBrute: gcc -o bruteSeq bruteForce.cu
 clean: 
