@@ -312,10 +312,10 @@ void seqFindPass_wrapper(passNum *passPtr, passNum *bruteNumOut)
 
 void seqFindPass(uint64_t *passPtr, uint64_t *bruteNumOut)
 {
-
-int i;
+uint64_t bruteNum = *passPtr;
+uint64_t i;
 #pragma omp parallel for
-for(i = 0; i <= *passPtr; i++)
+for(i = 0; i <= bruteNum; i++)
 {
 }
 
@@ -396,6 +396,7 @@ int main (int argc, char **argv) {
   //print out statistics
 	printf("Found!\nCPU Brute Force Time: %.2f msec\n", elapsed_time_cpu);
 	printf("GPU Brute Force Time: %.2f msec\n", elapsed_time_gpu);
+	printf("GPU Speedup: %.2f\n", elapsed_time_cpu/elapsed_time_gpu);
 	printf("Your password is %s\n",text);
 	printf("The computation tried the following number of strings:\n");
 	
